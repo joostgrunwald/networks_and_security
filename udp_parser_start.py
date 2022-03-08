@@ -2,6 +2,7 @@
 
 # This program uses the hexdump module, provided as a separate python file.
 
+from email.base64mime import header_length
 import hexdump
 import ipaddress
 import select
@@ -70,32 +71,25 @@ def parse_ipv4(packet):
     Remember that the IHL field is in the 4 *least* significant bits of byte 0,
     and it contains the number of 4-byte *rows* in the header.
     """
-    header = b''
-    payload = b''
-    (ttl, protocol, hdr_checksum, src, dst) = 0, 0, 0x0000, 0, 0
-    # IMPLEMENT HERE, REMOVE LINES ABOVE WHEN DONE
+    #remove the first 14 bytes because they contain ethernet data
+    toexamine = packet[14:34]
+    unpacket_packet = struct.unpack("!BBHHHBBH4s4s", toexamine)
+    
+    # Low 4 bits hold header length in 32-bit words;
+    # By multiplying by four 32-bit words are converted to bytes
+    header_length= (unpacket_packet[0] & 15) * 4
 
-    # we get the first byte, containing version and header length
-    firstbyte = packet[:1]
-    
-    #we extract the version
-    version = firstbyte >> 4
-    
-    #we extract the header length, the length is multiplication by 4
-    header_length = (firstbyte & 15) * 4
-    
-    
-    print(version, header_length)
+    # we get the needed information out of the header
+    ttl = unpacket_packet[5]
+    protocol = unpacket_packet[6]
+    hdr_checksum = unpacket_packet[7]
+    src = unpacket_packet[8]
+    dst = unpacket_packet[9]
 
-    #we extract the other info    
-    ttl, protocol, src, dst = struct.unpack('! 8x B B 2x 4s 4s', packet[:20]) 
-    
-    print(ttl, protocol, src, dst)
-    
-    #extract data
-    payload = packet[header_length:]
-    
-    # IMPLEMENT TO HERE, DO NOT CHANGE LINES BELOW
+    #we use header length to differentiate between header and payload
+    header = packet[14:14+header_length]
+    payload = packet[14+header_length]
+
     # Coerce the addresses into "IPv4Address" objects
     src_addr = ipaddress.IPv4Address(src)
     dst_addr = ipaddress.IPv4Address(dst)
