@@ -84,7 +84,16 @@ def parse_ipv4(packet):
     #we extract the header length, the length is multiplication by 4
     header_length = (firstbyte & 15) * 4
     
+    
     print(version, header_length)
+
+    #we extract the other info    
+    ttl, protocol, src, dst = struct.unpack('! 8x B B 2x 4s 4s', packet[:20]) 
+    
+    print(ttl, protocol, src, dst)
+    
+    #extract data
+    payload = packet[header_length:]
     
     # IMPLEMENT TO HERE, DO NOT CHANGE LINES BELOW
     # Coerce the addresses into "IPv4Address" objects
