@@ -156,7 +156,7 @@ def main():
                 build_pseudo_header_prefix(src_addr, dst_addr, protocol, len(segment))
                 + segment)
 
-            if protocol == ???: # USE UDP PROTOCOL NUMBER HERE
+            if protocol == 17: # USE UDP PROTOCOL NUMBER HERE
                 # UDP handling
                 (udp_src_port, udp_dst_port, udp_length, udp_checksum,
                  udp_data_length, udp_header, udp_payload) = parse_udp(segment)
@@ -165,7 +165,7 @@ def main():
                                     udp_checksum, transport_layer_checksum_valid)
                 dump_payload_to_console(udp_payload)
 
-            elif protocol == ???: # USE TCP PROTOCOL NUMBER HERE
+            elif protocol == 6: # USE TCP PROTOCOL NUMBER HERE
                 # TCP handling
                 (tcp_src_port, tcp_dst_port, tcp_seq_num, tcp_ack_num, tcp_flags,
                  tcp_window, tcp_checksum, tcp_header, tcp_payload) = parse_tcp(segment)
