@@ -133,8 +133,9 @@ def main():
     to use the IP header's protocol field to decide between sending the
     segment to the parse_udp or parse_tcp functions.
     """
-    udp_sock = socket.socket(???) # create raw UDP/IP socket here
-    tcp_sock = socket.socket(???) # create raw TCP/IP socket here
+    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+    tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+    
     while True:
         ready_socks, _, _ = select.select([udp_sock, tcp_sock], [], [], 5)
         if not ready_socks:
