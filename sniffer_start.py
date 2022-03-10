@@ -2,6 +2,7 @@
 
 # This program uses the hexdump module, provided as a separate python file.
 
+from email.base64mime import header_length
 import hexdump
 import ipaddress
 import select
@@ -37,9 +38,10 @@ def compute_checksum(buffer: bytes) -> int:
     if not buffer:
         return 0x0000
 
-    checksum = 0x0000
-    # IMPLEMENT HERE, REMOVE LINE ABOVE WHEN DONE
-    return checksum
+    b = bin(int(buffer, base=16))[2:]
+    mysum = hex(int(b, 2))
+
+    return mysum if mysum == 0xFFFF else mysum.invert()
 
 
 def verify_checksum(buffer: bytes):
@@ -70,12 +72,25 @@ def parse_ipv4(packet):
     Remember that the IHL field is in the 4 *least* significant bits of byte 0,
     and it contains the number of 4-byte *rows* in the header.
     """
-    header = b''
-    payload = b''
-    (ttl, protocol, hdr_checksum, src, dst) = 0, 0, 0x0000, 0, 0
-    # IMPLEMENT HERE, REMOVE LINES ABOVE WHEN DONE
+    #remove the first 14 bytes because they contain ethernet data
+    toexamine = packet[14:34]
+    unpacket_packet = struct.unpack("!BBHHHBBH4s4s", toexamine)
+    
+    # Low 4 bits hold header length in 32-bit words;
+    # By multiplying by four 32-bit words are converted to bytes
+    header_length= (unpacket_packet[0] & 15) * 4
 
-    # IMPLEMENT TO HERE, DO NOT CHANGE LINES BELOW
+    # we get the needed information out of the header
+    ttl = unpacket_packet[5]
+    protocol = unpacket_packet[6]
+    hdr_checksum = unpacket_packet[7]
+    src = unpacket_packet[8]
+    dst = unpacket_packet[9]
+
+    #we use header length to differentiate between header and payload
+    header = packet[14:14+header_length]
+    payload = packet[14+header_length]
+
     # Coerce the addresses into "IPv4Address" objects
     src_addr = ipaddress.IPv4Address(src)
     dst_addr = ipaddress.IPv4Address(dst)
@@ -111,14 +126,12 @@ def parse_tcp(segment):
 
     This is your job.
     """
-    header = b''
-    payload = b''
-    (src_port, dst_port, seq_num, ack_num, flags, window, checksum) = 0, 0, 0, 0, 0x00, 0, 0x0000
-    # IMPLEMENT HERE, REMOVE LINES ABOVE WHEN DONE
+    header = struct.unpack('!HHLLHHH', segment)
+    header_length = 14
+    (src_port, dst_port, seq_num, ack_num, flags, window, checksum) = header[0], header[1], header[2], header[3], header[4], header[5], header[6]
+    payload = segment[header_length:]
 
-    # IMPLEMENT TO HERE, DO NOT CHANGE LINES BELOW
     return src_port, dst_port, seq_num, ack_num, flags, window, checksum, header, payload
-
 
 def main():
     """
